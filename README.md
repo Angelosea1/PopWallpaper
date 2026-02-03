@@ -99,9 +99,23 @@ This will:
 sudo apt install mpvpaper
 ```
 
+**If this doesn't work:** Visit the [mpvpaper GitHub repository](https://github.com/GhostNaN/mpvpaper) and follow their installation guide.
+
+**If dependencies are missing:** Try:
+```bash
+sudo apt install meson ninja-build wayland-protocols libwayland-dev libegl-dev libmpv-dev
+```
+
 **Wallpaper not applying:**
 - Ensure you're running Wayland (required for mpvpaper)
 - Check mpvpaper is working: `mpvpaper --help`
+
+**`ModuleNotFoundError: No module named 'tkinter'`**
+
+Install the tkinter module:
+```bash
+sudo apt install python3-tk
+```
 
 ---
 
