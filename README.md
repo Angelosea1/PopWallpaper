@@ -41,7 +41,7 @@ sudo apt install mpvpaper
 
 ### 2. Clone the repository
 ```bash
-git clone https://github.com/YOUR_USERNAME/PopWallpaper.git
+git clone https://github.com/Angelosea1/PopWallpaper.git
 cd PopWallpaper
 ```
 
