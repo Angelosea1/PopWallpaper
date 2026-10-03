@@ -1,157 +1,170 @@
 # PopWallpaper
 
-> 🎨 A modern GUI application for managing and applying animated wallpapers from Wallpaper Engine on Pop!_OS 24.04 (COSMIC/Wayland)
+> Modern GUI application for managing and applying animated wallpapers from Steam Workshop on Pop!_OS
 
-![Python](https://img.shields.io/badge/python-3.8+-blue.svg)
+![Python](https://img.shields.io/badge/python-3.10+-blue.svg)
 ![License](https://img.shields.io/badge/license-MIT-green.svg)
 ![Platform](https://img.shields.io/badge/platform-Pop!_OS%2024.04-orange.svg)
 
-**🤖 Developed with AI:** This project was created with assistance from [Google Gemini](https://gemini.google.com/) AI.
+---
+
+## Features
+
+- Modern dark UI with customtkinter
+- Automatic scanning of Steam Workshop wallpapers
+- **Full Wallpaper Engine support**: video, scene, and web wallpapers
+- Thumbnail previews with GIF/JPG/PNG support
+- Per-monitor wallpaper control (apply different wallpapers to each monitor)
+- **Audio support**: wallpapers play their audio by default
+- **Auto-mute on focus**: mutes wallpaper audio when you switch to another window
+- **Apply on boot**: optionally auto-apply wallpapers when you log in
+- Monitor selector (All / HDMI-A-1 / DP-1 / etc.)
+- Type filter (Video / Scene / Web)
+- Persistent background processes (survives app closure)
 
 ---
 
-## ✨ Features
+## Requirements
 
-- 🎨 Modern dark UI using customtkinter
-- 📁 Automatic scanning of Steam Workshop wallpapers
-- 🎬 Support for video wallpapers (.mp4, .webm)
-- 🖼️ Preview images (JPG, PNG, GIF) with automatic format detection
-- 🔄 Easy wallpaper switching with thumbnail previews
-- ⚡ Persistent wallpapers via mpvpaper integration
-- 🚀 Independent background process (survives app closure)
-- 📝 Smart text handling for long wallpaper names
-
----
-
-## 📋 Requirements
-
-- Python 3.8+
-- mpvpaper (for applying wallpapers)
+- Python 3.10+
+- Pop!_OS 24.04 (Ubuntu-based, X11)
 - Steam with Wallpaper Engine workshop content
-- Pop!_OS 24.04 with Wayland/COSMIC
+- mpvpaper (for video wallpapers)
+- linux-wallpaperengine (for scene/web wallpapers, built from source)
 
 ---
 
-## 🚀 Installation
+## Installation
 
-### 1. Install mpvpaper
+### 1. Install system dependencies
+
 ```bash
+# mpvpaper for video wallpapers
 sudo apt install mpvpaper
+
+# linux-wallpaperengine build dependencies (for scene/web wallpapers)
+sudo apt install -y build-essential cmake git \
+  libxrandr-dev libxinerama-dev libxcursor-dev libxi-dev \
+  libgl-dev libglew-dev freeglut3-dev libglfw3-dev \
+  libsdl2-dev liblz4-dev libglm-dev \
+  libavcodec-dev libavformat-dev libavutil-dev libswscale-dev \
+  libxxf86vm-dev libmpv-dev libpulse-dev libpulse0 libfftw3-dev libfreetype-dev
 ```
 
-### 2. Clone the repository
+### 2. Build linux-wallpaperengine from source
+
 ```bash
-git clone https://github.com/YOUR_USERNAME/PopWallpaper.git
+cd /tmp
+git clone --recurse-submodules https://github.com/Almamu/linux-wallpaperengine.git
+cd linux-wallpaperengine
+mkdir build && cd build
+cmake -DCMAKE_BUILD_TYPE='Release' ..
+make -j$(nproc)
+
+sudo mkdir -p /opt/linux-wallpaperengine
+sudo cp -r output/* /opt/linux-wallpaperengine/
+sudo chmod +x /opt/linux-wallpaperengine/linux-wallpaperengine
+```
+
+### 3. Clone and run
+
+```bash
+git clone https://github.com/Angelosea1/PopWallpaper.git
 cd PopWallpaper
-```
-
-### 3. Install Desktop Shortcut (Recommended)
-```bash
-python3 install_shortcut.py
-```
-
-This will:
-- Create a `.desktop` file in your applications menu
-- Download an icon for the app
-- Configure proper launch paths
-- Make PopWallpaper accessible from your app launcher
-
-### 4. Quick Run (Without Installation)
-```bash
 ./run.sh
 ```
 
----
-
-## 📖 How It Works
-
-1. Scans your Steam Workshop directory for Wallpaper Engine content
-2. Parses `project.json` files to find video wallpapers
-3. Filters out non-video types (scenes, web)
-4. Displays wallpapers with preview images (supports JPG, PNG, GIF)
-5. Applies animated backgrounds using `mpvpaper`
-6. Manages processes independently for persistence
-
-### Directory Structure
-```
-~/.local/share/Steam/steamapps/workshop/content/431960/
-├── [workshop_id_1]/
-│   ├── project.json
-│   ├── preview.jpg (or .png, .gif)
-│   └── scene.mp4
-└── [workshop_id_2]/
-    ├── project.json
-    ├── preview.png
-    └── video.webm
-```
+`run.sh` automatically creates a virtual environment and installs Python dependencies on first run.
 
 ---
 
-## 🛠️ Troubleshooting
+## Supported Wallpaper Types
 
-**No wallpapers found:**
-- Ensure Steam is installed
-- Subscribe to Wallpaper Engine wallpapers in Workshop
-- Check workshop path: `~/.local/share/Steam/steamapps/workshop/content/431960`
-
-**mpvpaper not found:**
-```bash
-sudo apt install mpvpaper
-```
-
-**Wallpaper not applying:**
-- Ensure you're running Wayland (required for mpvpaper)
-- Check mpvpaper is working: `mpvpaper --help`
+| Type | Engine | Description |
+|------|--------|-------------|
+| Video (mp4, webm, avi, mkv) | mpvpaper | Animated video wallpapers with audio |
+| Scene | linux-wallpaperengine | Animated scene wallpapers with particles, shaders, and effects |
+| Web | linux-wallpaperengine | HTML/JS/CSS wallpapers rendered via CEF |
 
 ---
 
-## 📁 Project Structure
+## How It Works
+
+1. Scans Steam Workshop directory for Wallpaper Engine content (`project.json`)
+2. Detects wallpaper type (video/scene/web) and extracts metadata
+3. For **video**: launches `mpvpaper` with loop and IPC socket for mute control
+4. For **scene/web**: launches `linux-wallpaperengine` per-monitor
+5. Audio is managed via PulseAudio/PipeWire sink-input control
+6. Each monitor runs its own independent wallpaper process
+7. Config is saved to `~/.config/popwallpaper/config.json`
+
+---
+
+## Project Structure
 
 ```
 PopWallpaper/
-├── popwallpaper.py        # Main application
-├── install_shortcut.py    # Desktop shortcut installer
-├── lanzador.sh           # Background launcher script
-├── run.sh                # Main launcher
-├── requirements.txt      # Python dependencies
-├── README.md            # This file
-├── LICENSE              # MIT License
-└── docs/                # Documentation
-    ├── CAMBIOS.md       # Spanish changelog
-    ├── CORRECCIONES.md  # Bug fixes documentation
-    ├── FIX_PREVIEW.md   # Preview image fixes
-    └── FIX_LAYOUT.md    # Layout fixes
+├── popwallpaper.py        # Main application (GUI + WallpaperManager)
+├── run.sh                 # Launcher (creates venv, installs deps, runs app)
+├── setup.sh               # Installs linux-wallpaperengine from source
+├── lanzador.sh            # Legacy launcher (unused in current architecture)
+├── _sinkctl.py            # PulseAudio/PipeWire sink-input controller
+├── wpe_control.sh         # Legacy control script (unused in current architecture)
+├── requirements.txt       # Python dependencies
+├── LICENSE                # MIT License
+└── README.md              # This file
 ```
 
 ---
 
-## 🤝 Contributing
+## Configuration
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+Wallpaper config is saved at `~/.config/popwallpaper/config.json`:
+
+```json
+{
+  "wallpapers": [
+    {"title": "One Piece Legendary", "folder_path": "/path/to/wallpaper", "monitor": "HDMI-A-1"},
+    {"title": "Bleach", "folder_path": "/path/to/wallpaper", "monitor": "DP-1"}
+  ],
+  "apply_on_boot": true
+}
+```
 
 ---
 
-## 📄 License
+## Troubleshooting
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+**No wallpapers found:**
+- Ensure Steam is installed and Wallpaper Engine is in your library
+- Subscribe to wallpapers in the Steam Workshop
+- Check the workshop path exists: `~/.local/share/Steam/steamapps/workshop/content/431960`
 
-**AI Development:** This project was developed with assistance from Google Gemini AI.
+**Scene/Web wallpapers don't work:**
+- Ensure `linux-wallpaperengine` is built and installed at `/opt/linux-wallpaperengine/`
+- Verify: `/opt/linux-wallpaperengine/linux-wallpaperengine --help`
+
+**Audio not playing:**
+- Ensure PulseAudio or PipeWire is running
+- Check with `pactl list sink-inputs` for mpv/wallpaperengine entries
 
 ---
 
-## 🙏 Acknowledgments
+## Contributing
 
-- Developed with [Google Gemini](https://gemini.google.com/) AI assistance
+Contributions are welcome! Please open an issue or submit a Pull Request.
+
+---
+
+## License
+
+MIT License - see [LICENSE](LICENSE)
+
+---
+
+## Acknowledgments
+
+- [linux-wallpaperengine](https://github.com/Almamu/linux-wallpaperengine) by Almamu for scene/web rendering
+- [mpvpaper](https://github.com/GhostNaN/mpvpaper) for video wallpaper rendering
 - [CustomTkinter](https://github.com/TomSchimansky/CustomTkinter) for the modern UI
-- [mpvpaper](https://github.com/GhostNaN/mpvpaper) for wallpaper rendering
-- Wallpaper Engine community for amazing content
-
----
-
-## 📸 Screenshots
-
-> Add your screenshots here!
-
----
-
-**Made with ❤️ and 🤖 AI**
+- Steam Workshop community for amazing wallpapers

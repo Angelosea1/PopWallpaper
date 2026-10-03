@@ -27,3 +27,6 @@ icons/downloaded_*
 # Logs and temp files
 *.log
 *.tmp
+
+# External tools
+mpvpaper/
